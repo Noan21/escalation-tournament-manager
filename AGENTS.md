@@ -38,3 +38,53 @@ def run(stage_id: str, round_number: int, session):
     session.bulk_insert_mappings(Round, matches)
     session.commit()
     return {"round": round_number, "matches_created": len(matches)}
+
+Agents never know presentation logic. They only modify the DB and return structured data.
+⚙️ Event Lifecycle
+
+    Stage Created → RegistrationAgent pre-populates participants.
+
+    Create Round → PairingAgent generates matches using the selected format_key.
+
+    Enter Scores → Users PATCH matches directly.
+
+    Lock Round → ScoringAgent + StandingAgent compute results and update rankings.
+
+    End Event → OrchestratorAgent finalizes standings and pushes to SeasonAgent.
+
+    Season Summary → SeasonAgent consolidates and exposes /seasons/{id}/leaderboard.
+
+🧠 Future Extension Ideas
+
+    AI-assisted Match Insights – analyze score trends per faction or player.
+
+    Format Recommender – suggest next month’s format based on attendance and diversity.
+
+    ChatOps Integration – Discord bot surface using NotificationAgent.
+
+    Predictive Pairing Validation – run fairness checks before finalizing Swiss rounds.
+
+🗂 Folder Structure
+
+/api/app/agents
+  orchestrator_agent.py
+  pairing_agent.py
+  scoring_agent.py
+  standing_agent.py
+  registration_agent.py
+  season_agent.py
+  notification_agent.py
+  maintenance_agent.py
+
+Each file defines a run() entrypoint, optional helpers, and shared logging via app.core.logger.
+Notes
+
+    All agents must be idempotent.
+
+    All actions should use a database transaction (commit/rollback).
+
+    Results should be structured JSON for audit and debugging.
+
+    Agents can be invoked manually (CLI or FastAPI endpoint) or automatically (background task / scheduler).
+
+Seeded by system initialization for documentation and developer reference.
