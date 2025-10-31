@@ -1,0 +1,22 @@
+# Node
+node_modules/
+.pnpm-store/
+.next/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv/
+.mypy_cache/
+.pytest_cache/
+
+# Editors
+.vscode/
+.idea/
+
+# Alembic
+api/alembic/versions/*.pyc
