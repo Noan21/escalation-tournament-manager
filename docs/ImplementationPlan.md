@@ -38,7 +38,7 @@ Step-by-step roadmap for moving from documentation to a functioning platform.
 - [x] Implement NotificationService/Agent (preference management, delivery logging).
 - [x] Integrate email/webhook providers (start with log-based stub).
 - [x] Implement MaintenanceAgent cleanup/archive routines.
-- [ ] Extend frontend admin console for notifications/maintenance controls.
+- [x] Extend frontend admin console for notifications/maintenance controls.
 
 ## Phase 6 – Frontend UX Polish
 - [ ] Flesh out player-facing pages (registration, pairings, standings, season leaderboard).

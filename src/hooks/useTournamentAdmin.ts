@@ -4,12 +4,19 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useApiClient } from '@/hooks/useApiClient';
 import type {
+  ArchiveTriggerRequest,
+  CleanupTriggerRequest,
   EventProfile,
   EventRegistration,
+  MaintenanceSummary,
   MatchResultPayload,
+  NotificationDispatchRequest,
+  NotificationPreference,
+  NotificationPreferenceUpsert,
   RoundProfile,
   SeasonLeaderboard,
   StandingsPayload,
+  MigrationTriggerRequest,
 } from '@/types/tournament';
 
 export const useRegistrationsQuery = (eventId: string | null) => {
@@ -118,5 +125,102 @@ export const useSubmitMatchResult = () => {
         body: JSON.stringify(payload),
       });
     },
+  });
+};
+
+interface NotificationPreferenceParams {
+  organizationId?: string | null;
+  subjectId?: string | null;
+  subjectType?: string | null;
+}
+
+export const useNotificationPreferences = (params: NotificationPreferenceParams) => {
+  const { request } = useApiClient();
+  return useQuery<NotificationPreference[]>({
+    queryKey: ['notification-preferences', params],
+    enabled: Boolean(params.organizationId || params.subjectId || params.subjectType),
+    queryFn: async () => {
+      const search = new URLSearchParams();
+      if (params.organizationId) search.set('organization_id', params.organizationId);
+      if (params.subjectId) search.set('subject_id', params.subjectId);
+      if (params.subjectType) search.set('subject_type', params.subjectType);
+      const suffix = search.toString();
+      const url = suffix ? `/api/notifications/preferences?${suffix}` : '/api/notifications/preferences';
+      return request<NotificationPreference[]>(url, { requireAuth: true });
+    },
+  });
+};
+
+export const useUpsertNotificationPreference = () => {
+  const { request } = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation<NotificationPreference, Error, NotificationPreferenceUpsert>({
+    mutationFn: async (payload) =>
+      request<NotificationPreference>('/api/notifications/preferences', {
+        method: 'POST',
+        requireAuth: true,
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [
+          'notification-preferences',
+          {
+            organizationId: variables.organization_id,
+            subjectId: variables.subject_id,
+            subjectType: variables.subject_type,
+          },
+        ],
+      });
+    },
+  });
+};
+
+export const useDispatchNotification = () => {
+  const { request } = useApiClient();
+  return useMutation<void, Error, NotificationDispatchRequest>({
+    mutationFn: async (payload) => {
+      await request('/api/notifications/dispatch', {
+        method: 'POST',
+        requireAuth: true,
+        body: JSON.stringify(payload),
+      });
+    },
+  });
+};
+
+export const useRunMaintenanceCleanup = () => {
+  const { request } = useApiClient();
+  return useMutation<MaintenanceSummary, Error, CleanupTriggerRequest | undefined>({
+    mutationFn: async (payload) =>
+      request<MaintenanceSummary>('/api/maintenance/run-cleanup', {
+        method: 'POST',
+        requireAuth: true,
+        body: JSON.stringify(payload ?? {}),
+      }),
+  });
+};
+
+export const useRunMaintenanceArchive = () => {
+  const { request } = useApiClient();
+  return useMutation<MaintenanceSummary, Error, ArchiveTriggerRequest | undefined>({
+    mutationFn: async (payload) =>
+      request<MaintenanceSummary>('/api/maintenance/run-archive', {
+        method: 'POST',
+        requireAuth: true,
+        body: JSON.stringify(payload ?? {}),
+      }),
+  });
+};
+
+export const useRunMaintenanceMigrations = () => {
+  const { request } = useApiClient();
+  return useMutation<MaintenanceSummary, Error, MigrationTriggerRequest | undefined>({
+    mutationFn: async (payload) =>
+      request<MaintenanceSummary>('/api/maintenance/run-migrations', {
+        method: 'POST',
+        requireAuth: true,
+        body: JSON.stringify(payload ?? {}),
+      }),
   });
 };

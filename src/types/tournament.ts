@@ -84,3 +84,105 @@ export interface MatchResultPayload {
   total_points_b?: number;
 }
 
+export type NotificationChannel =
+  | "email"
+  | "discord_webhook"
+  | "slack_webhook"
+  | "sms"
+  | "webhook";
+
+export type NotificationSubjectType = "participant" | "team" | "admin";
+
+export type NotificationTrigger =
+  | "registration_confirmed"
+  | "round_pairings"
+  | "round_locked"
+  | "standings_published"
+  | "season_leaderboard";
+
+export interface NotificationChannelConfig {
+  channel: NotificationChannel;
+  address: string;
+  enabled: boolean;
+  rate_limit_per_hour?: number | null;
+}
+
+export interface NotificationPreference {
+  id: string;
+  organization_id: string;
+  subject_type: NotificationSubjectType;
+  subject_id: string;
+  triggers: NotificationTrigger[];
+  channels: NotificationChannelConfig[];
+  muted_until: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotificationPreferenceUpsert {
+  id?: string | null;
+  organization_id: string;
+  subject_type: NotificationSubjectType;
+  subject_id: string;
+  triggers: NotificationTrigger[];
+  channels: NotificationChannelConfig[];
+  muted_until?: string | null;
+}
+
+export interface NotificationDispatchRequest {
+  trigger: NotificationTrigger;
+  organization_id?: string | null;
+  stage_id?: string | null;
+  round_id?: string | null;
+  season_id?: string | null;
+  recipient_subject_type?: NotificationSubjectType | null;
+  recipient_subject_ids?: string[] | null;
+  subject?: string | null;
+  body_text?: string | null;
+  body_html?: string | null;
+  context?: Record<string, unknown>;
+}
+
+export interface NotificationMessagePayload {
+  trigger: NotificationTrigger;
+  recipient_subject_type: NotificationSubjectType;
+  recipient_subject_id: string;
+  channel: NotificationChannel;
+  address: string;
+  subject?: string | null;
+  body_text?: string | null;
+  body_html?: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface NotificationDelivery {
+  id: string;
+  message: NotificationMessagePayload;
+  sent_at: string | null;
+  status: "queued" | "sent" | "failed";
+  failure_reason?: string | null;
+  retry_count: number;
+  last_attempt_at?: string | null;
+}
+
+export interface MaintenanceSummary {
+  summary: string;
+  items_processed: number;
+  details: string[];
+}
+
+export interface CleanupTriggerRequest {
+  targets?: string[];
+  dry_run?: boolean;
+}
+
+export interface ArchiveTriggerRequest {
+  policy_ids?: string[];
+  dry_run?: boolean;
+}
+
+export interface MigrationTriggerRequest {
+  policy_ids?: string[];
+  dry_run?: boolean;
+}
