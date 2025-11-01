@@ -1,0 +1,25 @@
+# Runtime dependencies
+fastapi==0.120.4
+uvicorn[standard]==0.38.0
+sqlalchemy==2.0.44
+alembic==1.17.1
+psycopg[binary]==3.2.12
+python-dotenv==1.2.1
+pydantic==2.12.3
+pydantic-settings==2.11.0
+PyJWT[crypto]==2.10.1
+cryptography==46.0.3
+argon2-cffi==25.1.0
+email-validator==2.3.0
+python-multipart==0.0.20
+httpx==0.28.1
+apscheduler==3.11.1
+typer==0.20.0
+
+# Tooling & tests
+pytest==8.4.2
+pytest-asyncio==1.2.0
+pytest-cov==7.0.0
+black==25.9.0
+ruff==0.14.3
+mypy==1.18.2

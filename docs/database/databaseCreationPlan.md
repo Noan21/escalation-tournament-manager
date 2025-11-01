@@ -13,6 +13,7 @@ The `.env` file (already present at the repo root) defines the following keys:
 | `ANGROM_DB_ADMIN_PORT` | Admin port exposed by the cluster; use this with the `doadmin` account. |
 | `ANGROM_DB_ADMIN` / `ANGROM_DB_PASSWORD` | Cluster admin credentials. |
 | `ANGROM_DB_NAME` | Application database to create/manage. |
+| `ANGROM_TEST_DB_NAME` | Dedicated test database for integration tests (override `ANGROM_DB_NAME` when provisioning or migrating). |
 | `ANGROM_DB_USER` / `ANGROM_DB_USER_PASSWORD` | Service account the app uses via the connection pool. |
 | `ANGROM_HOST_POOL` | DigitalOcean connection pool hostname. |
 | `ANGROM_DB_POOL_PORT` | Port to reach the pool (application connections). |
@@ -24,7 +25,7 @@ Load these in your shell for ad-hoc commands with `dotenv`:
 pip install python-dotenv
 
 # Use the variables for a single command (e.g., psql as admin)
-dotenv -f .env run -- \
+dotenv run -- \
   psql "postgresql://${ANGROM_DB_ADMIN}:${ANGROM_DB_PASSWORD}@${ANGROM_DB_HOST}:${ANGROM_DB_ADMIN_PORT}/${ANGROM_DB_HOST_DEFAULT_DB}"
 ```
 
@@ -60,19 +61,28 @@ python scripts/setup_database.py
 
 The script is idempotent—rerunning it will ensure passwords and grants remain current.
 
+To scaffold the test database defined by `ANGROM_TEST_DB_NAME`, reuse the same script while overriding `ANGROM_DB_NAME` at invocation time:
+
+```bash
+dotenv run -- env ANGROM_DB_NAME=$ANGROM_TEST_DB_NAME python scripts/setup_database.py
+```
+
 ## 🛠️ Post-Setup Tasks
 
 1. **Migrations**: once Alembic migrations exist, run them with the admin connection or a migration-specific role:
    ```bash
-   dotenv -f .env run -- \
-     alembic upgrade head
+   dotenv run -- alembic upgrade head
+   ```
+   For the test database, override the target name or DSN when invoking Alembic:
+   ```bash
+   dotenv run -- env ANGROM_DB_NAME=$ANGROM_TEST_DB_NAME alembic upgrade head
    ```
    Ensure Alembic’s DSN uses the admin port or an account with DDL privileges.
 2. **Application configuration**: point the FastAPI service to the pool with a DSN like
    `postgresql+psycopg://${ANGROM_DB_USER}:${ANGROM_DB_USER_PASSWORD}@${ANGROM_HOST_POOL}:${ANGROM_DB_POOL_PORT}/${ANGROM_DB_NAME}`.
 3. **Verification**: connect via the pool and confirm you can list tables, insert data, etc.:
    ```bash
-   dotenv -f .env run -- \
+   dotenv run -- \
      psql "postgresql://${ANGROM_DB_USER}:${ANGROM_DB_USER_PASSWORD}@${ANGROM_HOST_POOL}:${ANGROM_DB_POOL_PORT}/${ANGROM_DB_NAME}" \
      -c '\dt'
    ```
@@ -85,12 +95,12 @@ Once the database is provisioned:
 2. Start the FastAPI backend with access to the pool connection string:
    ```bash
    ANGROM_DATABASE_URL="postgresql+psycopg://${ANGROM_DB_USER}:${ANGROM_DB_USER_PASSWORD}@${ANGROM_HOST_POOL}:${ANGROM_DB_POOL_PORT}/${ANGROM_DB_NAME}"
-   dotenv -f .env run -- \
+   dotenv run -- \
      uvicorn app.main:app --reload
    ```
 3. Launch the Next.js frontend with the same `dotenv` wrapper so it can call the API using the correct base URL:
    ```bash
-   dotenv -f .env run -- pnpm dev
+   dotenv run -- pnpm dev
    ```
 4. Confirm the admin UI reflects the current season after logging in; the application will read/write via the pool credentials established above.
 

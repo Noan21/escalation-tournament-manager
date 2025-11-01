@@ -1,0 +1,5 @@
+docs/
+alembic/
+dist/
+node_modules/
+.pnpm-store/

@@ -5,21 +5,19 @@ All automated tests run as integration tests against a real PostgreSQL instance.
 ## 🧪 Guiding Principles
 
 - Use pytest exclusively with the `asyncio` plugin where needed.
-- Spin up a dedicated test database (`ANGROM_DB_NAME_TEST`) on the same cluster; never mock the database.
+- Spin up a dedicated test database (`ANGROM_TEST_DB_NAME`) on the same cluster; never mock the database.
 - Each test runs inside a transaction that is rolled back after completion to preserve a clean state.
 - Seed data through fixtures using the same service interfaces the application uses.
 - Prefer exercising FastAPI endpoints via `httpx.AsyncClient` against the ASGI app for realistic request handling.
 
 ## 🏗️ Environment Setup
 
-1. Create a `.env.test` file mirroring `.env` but pointing to:
-   - `ANGROM_DB_NAME_TEST`
-   - Credentials with privileges to create/drop schemas in the test database.
-2. Provision the test database by reusing `scripts/setup_database.py` with environment overrides:
+1. Ensure `.env` includes `ANGROM_TEST_DB_NAME` alongside the primary database settings.
+2. Provision the test database by reusing `scripts/setup_database.py` while overriding the target database:
    ```bash
-   dotenv -f .env.test run -- python scripts/setup_database.py
+   dotenv run -- env ANGROM_DB_NAME=$ANGROM_TEST_DB_NAME python scripts/setup_database.py
    ```
-3. Run Alembic migrations against the test database before executing tests.
+3. Run Alembic migrations against the test database before executing tests (override `ANGROM_DB_NAME` or full DSN to point at `ANGROM_TEST_DB_NAME`).
 
 ## 🔁 Test Lifecycle
 
@@ -41,7 +39,7 @@ All automated tests run as integration tests against a real PostgreSQL instance.
 ## ⚙️ Running Tests
 
 ```bash
-dotenv -f .env.test run -- pytest
+dotenv run -- env ANGROM_DB_NAME=$ANGROM_TEST_DB_NAME pytest
 ```
 
 Add `--maxfail=1` and `-vv` for detailed output when debugging.
@@ -51,7 +49,7 @@ Add `--maxfail=1` and `-vv` for detailed output when debugging.
 - Transactions ensure isolation; if long-running jobs require commit, use database savepoints or explicit cleanup steps.
 - Periodically drop and recreate the test database to avoid schema drift:
   ```bash
-  psql ... -c "DROP DATABASE IF EXISTS angrom_db_test WITH (FORCE);"
+  psql ... -c "DROP DATABASE IF EXISTS ${ANGROM_TEST_DB_NAME} WITH (FORCE);"
   ```
 
 ## 🚫 What We’re Not Doing
