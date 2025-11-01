@@ -1,0 +1,36 @@
+# General
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.env
+.python-version
+.mypy_cache/
+.pytest_cache/
+htmlcov/
+.ruff_cache/
+.coverage
+.coverage.*
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.turbo/
+
+# IDEs & tooling
+.idea/
+.vscode/
+

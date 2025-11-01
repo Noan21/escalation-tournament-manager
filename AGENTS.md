@@ -5,6 +5,8 @@ This file defines the logical “agents” or service responsibilities for the t
 Each agent represents a clear function or automation trigger in the stack.  
 They are not AI models — just isolated, callable units within the FastAPI backend or external schedulers.
 
+> Runtime note: the platform is executed directly on the host without Docker. Use native Python and Node tooling (virtualenv, pnpm, etc.) when invoking agents or running supporting services. Production traffic is expected to flow through Cloudflare → Nginx (reverse proxy/SSL termination) → FastAPI, so agent endpoints should remain HTTP-friendly and stateless.
+
 ---
 
 ## 🎯 Overview
@@ -77,6 +79,28 @@ Agents never know presentation logic. They only modify the DB and return structu
   maintenance_agent.py
 
 Each file defines a run() entrypoint, optional helpers, and shared logging via app.core.logger.
+
+## 📚 Terminology
+
+- **Season**: A calendar-bounded collection of events for an organization (e.g., 2025 League Season).
+- **Event**: A discrete tournament instance within a season; can contain one or more stages.
+- **Stage**: An ordered phase inside an event (Swiss rounds, Top Cut, Teams pod, etc.).
+- **Round**: A numbered cycle of pairings within a stage.
+- **Match**: A single contest between two participants or teams inside a round.
+- **Registration**: The roster entry linking a participant or team to an event prior to staging.
+
+## 🧭 UX touchpoints
+
+- **Event signup**: Admins should expose a registration page allowing participants or teams to confirm attendance, feeding the RegistrationAgent.
+- **Admin controls**: Round creation, score entry, and lock actions are triggered via admin UI or CLI as noted in the overview table.
+- **Season selection**: Admins mark the current season (singleton) so player dashboards always load the active span.
+
+## 📐 Default ruleset expectations
+
+- Default event: single-stage Swiss with four rounds; OrchestratorAgent seeds this when no custom stages supplied.
+- ScoringAgent baseline: Win = 3 points, Draw = 1, Loss = 0, with margin-of-victory persisted for tiebreakers.
+- StandingAgent uses tiebreak hierarchy (Opponent Match Win %, head-to-head, score differential) when not overridden.
+- Matches assumed best-of-three, 60-minute timer; NotificationAgent messaging should reference these defaults unless event config overrides them.
 Notes
 
     All agents must be idempotent.
