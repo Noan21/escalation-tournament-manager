@@ -70,15 +70,15 @@ dotenv run -- env ANGROM_DB_NAME=$ANGROM_TEST_DB_NAME python scripts/setup_datab
 
 ## 🛠️ Post-Setup Tasks
 
-1. **Migrations**: once Alembic migrations exist, run them with the pool connection so the DSN matches production. By default this targets `ANGROM_APP_POOL`:
+1. **Create tables**: run the bootstrap script with admin credentials to materialize all schema objects in `ANGROM_DB_NAME`:
    ```bash
-   dotenv run -- alembic upgrade head
+   python scripts/bootstrap_schema.py
    ```
-   For the test database, point the pool override at `ANGROM_TEST_POOL`:
+   For the test database, point the script at the alternate database:
    ```bash
-   dotenv run -- env ANGROM_APP_POOL=$ANGROM_TEST_POOL alembic upgrade head
+   python scripts/bootstrap_schema.py --database $ANGROM_TEST_DB_NAME
    ```
-   When direct admin access is required, continue to use `ANGROM_DB_HOST` + `ANGROM_DB_ADMIN_PORT` and `ANGROM_DB_NAME`.
+   The script connects via the admin port and reapplies privileges to the service user.
 2. **Application configuration**: point the FastAPI service to the pool with a DSN like
    `postgresql+psycopg://${ANGROM_DB_USER}:${ANGROM_DB_USER_PASSWORD}@${ANGROM_DB_HOST}:${ANGROM_DB_POOL_PORT}/${ANGROM_APP_POOL}?sslmode=require`.
 3. **Verification**: connect via the pool and confirm you can list tables, insert data, etc.:

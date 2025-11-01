@@ -8,7 +8,7 @@ Frontend: Next.js 15 (App Router) + TypeScript + Tailwind.
 
 API: FastAPI (Python 3.11) async.
 
-Data: PostgreSQL 17, SQLAlchemy 2.x + Alembic.
+Data: PostgreSQL 17, SQLAlchemy 2.x.
 
 Runtime: Native host processes (no Docker); manage services via local tooling and supervisors. Nginx sits in front of the FastAPI/Next.js services for reverse proxy + TLS termination, with Cloudflare providing the external edge.
 

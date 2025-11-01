@@ -3,15 +3,14 @@
 Step-by-step roadmap for moving from documentation to a functioning platform.
 
 ## Phase 0 – Environment Prep
-- [ ] Ensure `.env` defines `ANGROM_TEST_DB_NAME` / `ANGROM_TEST_POOL` and run `dotenv run -- env ANGROM_DB_NAME=$ANGROM_TEST_DB_NAME python scripts/setup_database.py` to provision the test database (override `ANGROM_APP_POOL=$ANGROM_TEST_POOL` when running migrations/tests).
+- [ ] Ensure `.env` defines `ANGROM_TEST_DB_NAME` / `ANGROM_TEST_POOL` and run `dotenv run -- env ANGROM_DB_NAME=$ANGROM_TEST_DB_NAME python scripts/setup_database.py` to provision the test database (override `ANGROM_APP_POOL=$ANGROM_TEST_POOL` when running tests).
 - [x] Set up Python/Node toolchains (`python -m venv .venv`, `pnpm install` once package manifests exist).
-- [x] Create a dependency manifest (`pyproject.toml` + lockfile or `requirements.txt`) capturing baseline backend packages (FastAPI, SQLAlchemy, Alembic, pytest, etc.).
+- [x] Create a dependency manifest (`pyproject.toml` + lockfile or `requirements.txt`) capturing baseline backend packages (FastAPI, SQLAlchemy, pytest, etc.).
 - [x] Configure linting/formatting (`ruff`, `black`, `mypy`, `eslint`, `prettier`) baseline configs.
-- [x] Initialize Alembic with Postgres 17 target.
 
 ## Phase 1 – Database & Models
 - [x] Define SQLAlchemy models matching `docs/database/DatabaseSchema.md`.
-- [x] Generate initial Alembic migration (`alembic/versions/a3c5a7cbeb6d_initial_schema.py`); apply to databases once connectivity to the managed cluster is available.
+- [x] Implement `scripts/bootstrap_schema.py` to materialize tables and apply grants.
 - [x] Implement Pydantic schemas mirroring `docs/classes/`.
 - [x] Add fixtures/utilities for integration tests (transactional session, seed helpers).
 

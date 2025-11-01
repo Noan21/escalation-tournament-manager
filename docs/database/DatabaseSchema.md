@@ -397,7 +397,7 @@ Unique: `(stage_id, subject_type, subject_id)`.
 ## 🔐 Audit Tables (Future)
 
 - `activity_log` (captures admin actions, season switches, manual score edits).
-- `schema_migrations` (Alembic history).
+- `schema_migrations` (reserved for future migration tracking if needed).
 
 ## 🔗 Relationship Overview
 
@@ -408,4 +408,4 @@ Unique: `(stage_id, subject_type, subject_id)`.
 - Maintenance policies tie back to the singleton organization.
 - `users` ↔ auth token tables (`email_verification_tokens`, `magic_link_tokens`, `sessions`) support login flows.
 
-This schema is the baseline for Alembic migrations and can be evolved alongside the typed class definitions in `docs/classes/`.
+This schema is the baseline for implementation and can be evolved alongside the typed class definitions in `docs/classes/`.

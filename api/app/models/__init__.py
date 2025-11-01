@@ -1,6 +1,6 @@
 """
 SQLAlchemy models package. Importing this module exposes the Base metadata
-and ensures all model definitions are registered for Alembic autogenerate.
+and ensures all model definitions are registered for metadata operations.
 """
 
 from . import (
@@ -24,4 +24,3 @@ __all__ = [
     "standings",
     "structure",
 ]
-

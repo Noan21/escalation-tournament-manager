@@ -17,9 +17,9 @@ All automated tests run as integration tests against a real PostgreSQL instance.
    ```bash
    dotenv run -- env ANGROM_DB_NAME=$ANGROM_TEST_DB_NAME python scripts/setup_database.py
    ```
-3. Run Alembic migrations against the test database before executing tests by overriding the pool target:
+3. Create the schema inside the test database using the bootstrap script:
    ```bash
-   dotenv run -- env ANGROM_APP_POOL=$ANGROM_TEST_POOL alembic upgrade head
+   python scripts/bootstrap_schema.py --database $ANGROM_TEST_DB_NAME
    ```
 
 ## 🔁 Test Lifecycle

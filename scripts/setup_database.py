@@ -35,11 +35,21 @@ def require_env(name: str) -> str:
     return value
 
 
+def require_admin_password() -> str:
+    password = os.getenv("ANGROM_DB_ADMIN_PASSWORD") or os.getenv("ANGROM_DB_PASSWORD")
+    if not password:
+        raise RuntimeError(
+            "Environment variable ANGROM_DB_ADMIN_PASSWORD is required (fallback "
+            "ANGROM_DB_PASSWORD is supported for backward compatibility)."
+        )
+    return password
+
+
 def connect_admin():
     host = require_env("ANGROM_DB_HOST")
     port = require_env("ANGROM_DB_ADMIN_PORT")
     user = require_env("ANGROM_DB_ADMIN")
-    password = require_env("ANGROM_DB_PASSWORD")
+    password = require_admin_password()
     default_db = require_env("ANGROM_DB_HOST_DEFAULT_DB")
 
     return connect(
@@ -94,7 +104,7 @@ def setup_inside_database(db_name: str, username: str):
     host = require_env("ANGROM_DB_HOST")
     port = require_env("ANGROM_DB_ADMIN_PORT")
     admin_user = require_env("ANGROM_DB_ADMIN")
-    admin_password = require_env("ANGROM_DB_PASSWORD")
+    admin_password = require_admin_password()
 
     with connect(
         host=host,
