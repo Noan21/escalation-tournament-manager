@@ -15,10 +15,8 @@ import os
 import sys
 from pathlib import Path
 
-from psycopg import sql
-from psycopg import connect
 from dotenv import load_dotenv
-
+from psycopg import connect, sql
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 ENV_PATH = REPO_ROOT / ".env"

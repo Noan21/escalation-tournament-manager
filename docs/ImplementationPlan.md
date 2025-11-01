@@ -10,9 +10,9 @@ Step-by-step roadmap for moving from documentation to a functioning platform.
 - [x] Initialize Alembic with Postgres 17 target.
 
 ## Phase 1 – Database & Models
-- [ ] Define SQLAlchemy models matching `docs/database/DatabaseSchema.md`.
-- [ ] Generate initial Alembic migration and apply to dev/test DB.
-- [ ] Implement Pydantic schemas mirroring `docs/classes/`.
+- [x] Define SQLAlchemy models matching `docs/database/DatabaseSchema.md`.
+- [x] Generate initial Alembic migration (`alembic/versions/a3c5a7cbeb6d_initial_schema.py`); apply to databases once connectivity to the managed cluster is available.
+- [x] Implement Pydantic schemas mirroring `docs/classes/`.
 - [ ] Add fixtures/utilities for integration tests (transactional session, seed helpers).
 
 ## Phase 2 – Auth Foundation

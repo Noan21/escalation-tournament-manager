@@ -5,16 +5,18 @@ target-version = ["py313"]
 [tool.ruff]
 line-length = 100
 target-version = "py313"
+
+[tool.ruff.lint]
 extend-select = [
-    "B",   # flake8-bugbear
-    "E",   # pycodestyle errors
-    "F",   # pyflakes
-    "I",   # isort
-    "UP",  # pyupgrade
+    "B",
+    "E",
+    "F",
+    "I",
+    "UP",
 ]
 ignore = [
-    "E203",  # handled by black
-    "E501",  # handled by black
+    "E203",
+    "E501",
 ]
 
 [tool.ruff.lint.isort]
