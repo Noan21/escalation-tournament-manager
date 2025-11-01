@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
-
 from fastapi import Depends, FastAPI
-from sqlalchemy.ext.asyncio import AsyncSession
+
+from .api import auth as auth_router
+from .core.database import get_db_session, shutdown_database
 
 app = FastAPI(title="Escalation Tournament Manager API")
-
-
-async def get_db_session() -> AsyncIterator[AsyncSession]:
-    """Placeholder dependency until the real session wiring is implemented."""
-    raise RuntimeError("Database session dependency has not been configured.")
+app.include_router(auth_router.router, prefix="/api/auth", tags=["auth"])
 
 
 @app.get("/health", tags=["health"])
@@ -22,6 +18,11 @@ async def health_check() -> dict[str, str]:
 async def debug_db_check() -> dict[str, bool]:
     """Endpoint used by tests once dependency overrides are in place."""
     return {"database": True}
+
+
+@app.on_event("shutdown")
+async def on_shutdown() -> None:
+    await shutdown_database()
 
 
 __all__ = ["app", "get_db_session"]

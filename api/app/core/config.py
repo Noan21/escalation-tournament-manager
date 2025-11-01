@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import os
 from functools import lru_cache
-from typing import Any
 
 from dotenv import load_dotenv
-from pydantic import Field, validator
-from pydantic_settings import BaseSettings
+from pydantic import Field, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 load_dotenv()
 
@@ -38,14 +37,16 @@ def _build_default_database_url() -> str:
 class Settings(BaseSettings):
     """Application configuration loaded from environment variables."""
 
+    model_config = SettingsConfigDict(env_prefix="ANGROM_", case_sensitive=False)
+
     database_url: str = Field(default_factory=_build_default_database_url)
 
     jwt_access_secret: str = Field(
         default="dev-access-secret",
         description="Secret key for signing access tokens.",
     )
-    jwt_refresh_secret: str | None = Field(
-        default=None,
+    jwt_refresh_secret: str = Field(
+        default="",
         description="Secret key for signing refresh tokens (defaults to access secret).",
     )
     jwt_algorithm: str = Field(default="HS256")
@@ -55,15 +56,11 @@ class Settings(BaseSettings):
     email_verification_hours: int = Field(default=24)
     magic_link_minutes: int = Field(default=15)
 
-    class Config:
-        env_prefix = "ANGROM_"
-        case_sensitive = False
-
-    @validator("jwt_refresh_secret", pre=True, always=True)
-    def default_refresh_secret(cls, v: str | None, values: dict[str, Any]) -> str:
-        if v:
-            return v
-        return values.get("jwt_access_secret")  # type: ignore[return-value]
+    @model_validator(mode="after")
+    def default_refresh_secret(self) -> Settings:
+        if not self.jwt_refresh_secret:
+            self.jwt_refresh_secret = self.jwt_access_secret
+        return self
 
 
 @lru_cache(maxsize=1)

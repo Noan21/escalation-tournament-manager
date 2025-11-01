@@ -17,21 +17,7 @@ async def test_registration_verification_and_login(app_client, auth_dispatcher: 
     assert resp.status_code == status.HTTP_201_CREATED
     data = resp.json()
     assert data["email"] == payload["email"].lower()
-    assert data["email_verified_at"] is None
-
-    # Should not allow login prior to verification
-    resp = await app_client.post(
-        "/api/auth/login",
-        json={"identifier": payload["username"], "password": payload["password"]},
-    )
-    assert resp.status_code == status.HTTP_403_FORBIDDEN
-
-    # Verify email using captured token
-    token = auth_dispatcher.verification_tokens[payload["email"].lower()][0]
-    resp = await app_client.get("/api/auth/verify-email", params={"token": token})
-    assert resp.status_code == status.HTTP_204_NO_CONTENT
-
-    # Login should now succeed
+    # Login should succeed immediately (email verification optional)
     resp = await app_client.post(
         "/api/auth/login",
         json={"identifier": payload["email"], "password": payload["password"]},
@@ -86,8 +72,6 @@ async def test_magic_link_flow(app_client, auth_dispatcher: InMemoryAuthDispatch
         "/api/auth/register",
         json={"username": "magic", "email": email, "password": password},
     )
-    verification_token = auth_dispatcher.verification_tokens[email][0]
-    await app_client.get("/api/auth/verify-email", params={"token": verification_token})
 
     # Request magic link
     resp = await app_client.post(

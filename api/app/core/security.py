@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, cast
 
 import jwt
 from argon2 import PasswordHasher
@@ -66,18 +66,24 @@ def create_refresh_token(
 
 
 def decode_access_token(token: str) -> dict[str, Any]:
-    return jwt.decode(
-        token,
-        settings.jwt_access_secret,
-        algorithms=[settings.jwt_algorithm],
+    return cast(
+        dict[str, Any],
+        jwt.decode(
+            token,
+            settings.jwt_access_secret,
+            algorithms=[settings.jwt_algorithm],
+        ),
     )
 
 
 def decode_refresh_token(token: str) -> dict[str, Any]:
-    return jwt.decode(
-        token,
-        settings.jwt_refresh_secret,
-        algorithms=[settings.jwt_algorithm],
+    return cast(
+        dict[str, Any],
+        jwt.decode(
+            token,
+            settings.jwt_refresh_secret,
+            algorithms=[settings.jwt_algorithm],
+        ),
     )
 
 

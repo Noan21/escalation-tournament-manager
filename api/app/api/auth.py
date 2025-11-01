@@ -2,14 +2,9 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
-from api.app.dependencies.auth import (
-    get_auth_service,
-    get_current_user,
-    get_current_user_profile,
-    service_call,
-)
+from api.app.dependencies.auth import get_auth_service, get_current_user, get_current_user_profile
 from api.app.models.auth import User
 from api.app.schemas.auth import (
     AuthTokens,
@@ -22,6 +17,7 @@ from api.app.schemas.auth import (
     UserProfile,
 )
 from api.app.services.auth import AuthService
+from api.app.services.exceptions import ServiceError
 
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 CurrentUserDep = Annotated[User, Depends(get_current_user)]
@@ -39,12 +35,18 @@ def _extract_context(request: Request) -> dict[str, str | None]:
 
 @router.post("/register", response_model=UserProfile, status_code=status.HTTP_201_CREATED)
 async def register_user(payload: RegisterRequest, service: AuthServiceDep) -> UserProfile:
-    return await service_call(service.register_user, payload)
+    try:
+        return await service.register_user(payload)
+    except ServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
 
 @router.get("/verify-email", status_code=status.HTTP_204_NO_CONTENT)
 async def verify_email(token: str, service: AuthServiceDep) -> Response:
-    await service_call(service.verify_email, token)
+    try:
+        await service.verify_email(token)
+    except ServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -55,12 +57,14 @@ async def login(
     service: AuthServiceDep,
 ) -> AuthTokens:
     context = _extract_context(request)
-    return await service_call(
-        service.authenticate_user,
-        payload,
-        user_agent=context["user_agent"],
-        ip_address=context["ip_address"],
-    )
+    try:
+        return await service.authenticate_user(
+            payload,
+            user_agent=context["user_agent"],
+            ip_address=context["ip_address"],
+        )
+    except ServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
 
 @router.post("/refresh", response_model=AuthTokens)
@@ -70,12 +74,14 @@ async def refresh_tokens(
     service: AuthServiceDep,
 ) -> AuthTokens:
     context = _extract_context(request)
-    return await service_call(
-        service.refresh_tokens,
-        payload.refresh_token,
-        user_agent=context["user_agent"],
-        ip_address=context["ip_address"],
-    )
+    try:
+        return await service.refresh_tokens(
+            payload.refresh_token,
+            user_agent=context["user_agent"],
+            ip_address=context["ip_address"],
+        )
+    except ServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
@@ -84,7 +90,10 @@ async def logout(
     current_user: CurrentUserDep,
     service: AuthServiceDep,
 ) -> Response:
-    await service_call(service.logout, current_user.id, payload.refresh_token)
+    try:
+        await service.logout(current_user.id, payload.refresh_token)
+    except ServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -95,12 +104,14 @@ async def request_magic_link(
     service: AuthServiceDep,
 ) -> Response:
     context = _extract_context(request)
-    await service_call(
-        service.issue_magic_link,
-        payload,
-        user_agent=context["user_agent"],
-        ip_address=context["ip_address"],
-    )
+    try:
+        await service.issue_magic_link(
+            payload,
+            user_agent=context["user_agent"],
+            ip_address=context["ip_address"],
+        )
+    except ServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
     return Response(status_code=status.HTTP_202_ACCEPTED)
 
 
@@ -111,12 +122,14 @@ async def consume_magic_link(
     service: AuthServiceDep,
 ) -> AuthTokens:
     context = _extract_context(request)
-    return await service_call(
-        service.consume_magic_link,
-        payload,
-        user_agent=context["user_agent"],
-        ip_address=context["ip_address"],
-    )
+    try:
+        return await service.consume_magic_link(
+            payload,
+            user_agent=context["user_agent"],
+            ip_address=context["ip_address"],
+        )
+    except ServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
 
 @router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
@@ -125,7 +138,10 @@ async def change_password(
     current_user: CurrentUserDep,
     service: AuthServiceDep,
 ) -> Response:
-    await service_call(service.change_password, current_user.id, payload)
+    try:
+        await service.change_password(current_user.id, payload)
+    except ServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

@@ -1,11 +1,11 @@
 # Authentication Plan
 
-Application-specific username/password auth with email verification and optional magic-link login. No third-party identity provider.
+Application-specific username/password auth with optional magic-link login and Resend-powered transactional email. No third-party identity provider.
 
 ## 🔐 Credentials
 
 - `username`: unique, min length 3, stored lowercase.
-- `email`: required, must be verified before full access; used for magic links.
+- `email`: required, used for password resets and magic links.
 - `password_hash`: stored using Argon2id via `passlib` (`argon2-cffi` backend). Passwords never stored in plain text.
 - Password policy: minimum 12 characters, enforce at validation layer.
 
@@ -13,15 +13,15 @@ Application-specific username/password auth with email verification and optional
 
 - `passlib[argon2]` for secure hashing/verification.
 - `python-jose` or `PyJWT` for signing access/refresh tokens.
-- `itsdangerous` for time-bound signed email verification & magic-link tokens (alternatively use JWT with dedicated claims).
-- `aiosmtplib` or transactional email API (SendGrid, Mailgun) for sending verification & magic-link emails.
+- `itsdangerous` for time-bound signed magic-link tokens (alternatively use JWT with dedicated claims).
+- Resend Python SDK (see `docs/packages/ResendSdkPython.md`) for sending magic-link and password-reset emails.
 
 ## 🗃️ Database Tables
 
 Add to PostgreSQL schema (see `docs/database/DatabaseSchema.md`):
 
 - `users`: core identity (id, username, email, email_verified_at, password_hash, roles, last_login_at, created_at, updated_at).
-- `email_verification_tokens`: store issued tokens with expiry.
+- `email_verification_tokens`: optional; available if stricter policies require explicit email confirmation later.
 - `magic_link_tokens`: single-use tokens for passwordless login; include request metadata (ip, user_agent) for auditing.
 - `sessions` (optional): refresh tokens or persistent sessions for revocation.
 - `password_reset_tokens`: optional separate table if we later support password reset distinct from magic links.
@@ -33,25 +33,21 @@ All token tables should store `hashed_token` (e.g., SHA-256 of the raw token) to
 ### Registration
 1. User submits `username`, `email`, `password`.
 2. Validate uniqueness and password strength.
-3. Hash password with Argon2id; insert into `users` with `email_verified_at = NULL`.
-4. Generate email verification token (signed string), store hashed version, send verification email.
-5. Return 201 with limited session token or require verification before login (configurable).
+3. Hash password with Argon2id; insert into `users` and mark `email_verified_at` immediately.
+4. Optionally send a welcome/notification email via Resend.
+5. Return 201; the user can authenticate right away.
 
-### Email Verification
-1. User clicks verification link (`GET /api/auth/verify-email?token=...`).
-2. Verify signature + expiry; look up hashed token in table.
-3. Mark `email_verified_at` and delete token.
-4. Optionally issue new auth tokens or redirect to login.
+### Email Verification (Optional)
+- Not required for the initial release. The tables and endpoint remain for future use, but newly registered accounts do not need to verify before logging in.
 
 ### Username/Password Login
 1. User submits `username` (or email) + password.
 2. Look up user, verify password via `passlib`.
-3. Reject if `email_verified_at` is null (return 403 with “verify email” message).
-4. Issue access token (JWT 15m) + refresh token (JWT 7d) or session entry.
-5. Record `last_login_at`, store refresh token hash if using DB-backed sessions.
+3. Issue access token (JWT 15m) + refresh token (JWT 7d) or session entry.
+4. Record `last_login_at`, store refresh token hash if using DB-backed sessions.
 
 ### Magic Link Login
-1. User enters verified email.
+1. User enters email (must correspond to an existing account).
 2. Generate time-bound token (10–15 min), store hashed token in `magic_link_tokens` with single-use flag.
 3. Email link (`https://app/.../magic-login?token=...`).
 4. On consumption, verify token, mark consumed, issue auth tokens as in password login.
@@ -77,7 +73,7 @@ All token tables should store `hashed_token` (e.g., SHA-256 of the raw token) to
 
 ## 🧪 Testing
 
-- Integration tests hit the real Postgres test database for registration → verification → login and magic-link flows.
+- Integration tests hit the real Postgres test database for registration → login and magic-link flows (email verification is bypassed).
 - Validate password hashing and token expiry through end-to-end scenarios (no isolated unit tests).
 
 ## 🗂️ Implementation Outline
@@ -88,7 +84,7 @@ All token tables should store `hashed_token` (e.g., SHA-256 of the raw token) to
    - `POST /login`
    - `POST /magic-link`
    - `POST /magic-link/consume`
-   - `GET /verify-email`
+   - `GET /verify-email` (optional)
    - `POST /change-password`
    - `POST /logout`
 3. Integrate with middleware/dependencies to extract user/roles from access token.

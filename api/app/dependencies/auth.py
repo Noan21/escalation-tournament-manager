@@ -16,7 +16,6 @@ from api.app.services.auth import (
     AuthService,
     ConsoleAuthNotificationBackend,
 )
-from api.app.services.exceptions import ServiceError
 
 http_bearer = HTTPBearer(auto_error=True)
 CredentialsDep = Annotated[HTTPAuthorizationCredentials, Depends(http_bearer)]
@@ -40,7 +39,7 @@ async def get_current_user(
     token = credentials.credentials
     try:
         payload = security.decode_access_token(token)
-    except jwt.PyJWTError as exc:  # type: ignore[attr-defined]
+    except jwt.PyJWTError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token") from exc
 
     if payload.get("type") != "access":
@@ -61,10 +60,3 @@ async def get_current_user_profile(
     user: Annotated[User, Depends(get_current_user)]
 ) -> UserProfile:
     return UserProfile.model_validate(user)
-
-
-async def service_call(handler, *args, **kwargs):
-    try:
-        return await handler(*args, **kwargs)
-    except ServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc

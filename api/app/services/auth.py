@@ -86,7 +86,8 @@ class AuthService:
         self.session.add(user)
         await self.session.flush()
 
-        await self._issue_email_verification(user)
+        # Optional email verification is not required; mark as verified immediately.
+        user.email_verified_at = datetime.now(tz=UTC)
         await self.session.commit()
         await self.session.refresh(user)
         return UserProfile.model_validate(user)
@@ -131,9 +132,6 @@ class AuthService:
 
         if not security.verify_password(payload.password, user.password_hash):
             raise UnauthorizedError("Invalid credentials")
-
-        if not user.email_verified_at:
-            raise ForbiddenError("Email verification required")
 
         tokens = await self._issue_session_tokens(user, user_agent=user_agent, ip_address=ip_address)
         user.last_login_at = datetime.now(tz=UTC)
