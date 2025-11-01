@@ -13,7 +13,7 @@ Step-by-step roadmap for moving from documentation to a functioning platform.
 - [x] Define SQLAlchemy models matching `docs/database/DatabaseSchema.md`.
 - [x] Generate initial Alembic migration (`alembic/versions/a3c5a7cbeb6d_initial_schema.py`); apply to databases once connectivity to the managed cluster is available.
 - [x] Implement Pydantic schemas mirroring `docs/classes/`.
-- [ ] Add fixtures/utilities for integration tests (transactional session, seed helpers).
+- [x] Add fixtures/utilities for integration tests (transactional session, seed helpers).
 
 ## Phase 2 – Auth Foundation
 - [ ] Implement `AuthService` (password hashing, tokens, email verification, magic links).
