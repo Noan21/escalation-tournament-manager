@@ -79,10 +79,36 @@ class NotificationDelivery(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class NotificationPreferenceUpsert(BaseModel):
+    id: UUID | None = None
+    organization_id: UUID
+    subject_type: NotificationSubjectType
+    subject_id: UUID
+    triggers: list[EventTrigger] = Field(default_factory=list)
+    channels: list[ChannelConfig] = Field(default_factory=list)
+    muted_until: datetime | None = None
+
+
+class NotificationDispatchRequest(BaseModel):
+    trigger: EventTrigger
+    organization_id: UUID | None = None
+    stage_id: UUID | None = None
+    round_id: UUID | None = None
+    season_id: UUID | None = None
+    recipient_subject_type: NotificationSubjectType | None = None
+    recipient_subject_ids: list[UUID] | None = None
+    subject: str | None = None
+    body_text: str | None = None
+    body_html: str | None = None
+    context: dict[str, object] = Field(default_factory=dict)
+
+
 __all__ = [
     "ChannelConfig",
     "EventTrigger",
     "NotificationDelivery",
+    "NotificationDispatchRequest",
     "NotificationMessage",
+    "NotificationPreferenceUpsert",
     "NotificationPreference",
 ]

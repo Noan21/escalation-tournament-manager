@@ -352,6 +352,7 @@ Unique: `(stage_id, subject_type, subject_id)`.
 | `status` | text | enum (`queued`,`sent`,`failed`) |
 | `failure_reason` | text | nullable |
 | `retry_count` | int | not null default 0 |
+| `organization_id` | uuid | fk → `organizations.id` |
 | `created_at` / `sent_at` / `last_attempt_at` | timestamptz | nullable |
 
 ## 🧹 Maintenance

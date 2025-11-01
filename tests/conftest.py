@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -22,14 +22,54 @@ from api.app.models import Base
 from api.app.services.auth import AuthNotificationBackend
 
 
+def _reset_database_schema() -> None:
+    admin_user = os.environ["ANGROM_DB_ADMIN"]
+    admin_password = os.environ["ANGROM_DB_ADMIN_PASSWORD"]
+    host = os.environ["ANGROM_DB_HOST"]
+    port = os.environ["ANGROM_DB_ADMIN_PORT"]
+    database = os.environ.get("ANGROM_TEST_DB_NAME", os.environ["ANGROM_DB_NAME"])
+
+    admin_url = (
+        "postgresql+psycopg://"
+        f"{admin_user}:{admin_password}@{host}:{port}/{database}?sslmode=require"
+    )
+    engine = create_engine(admin_url, future=True)
+    service_user = os.environ["ANGROM_DB_USER"]
+
+    with engine.begin() as connection:
+        try:
+            connection.execute(text("DROP SCHEMA IF EXISTS public CASCADE"))
+            connection.execute(text("CREATE SCHEMA public"))
+            connection.execute(text("CREATE EXTENSION IF NOT EXISTS pgcrypto"))
+        except Exception as exc:  # pragma: no cover - debug aid
+            raise RuntimeError(f"Failed to reset schema: {exc}") from exc
+        quoted_user = f'"{service_user}"'
+        connection.execute(text(f"GRANT ALL ON SCHEMA public TO {quoted_user}"))
+        connection.execute(text("GRANT ALL ON SCHEMA public TO public"))
+        Base.metadata.create_all(bind=connection, checkfirst=False)
+        connection.execute(
+            text(
+                f"GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO {quoted_user}"
+            )
+        )
+        connection.execute(
+            text(
+                f"GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO {quoted_user}"
+            )
+        )
+
+
 def _database_url() -> str:
     """Return the async PostgreSQL URL using pool configuration."""
     user = os.environ["ANGROM_DB_USER"]
     password = os.environ["ANGROM_DB_USER_PASSWORD"]
     host = os.environ["ANGROM_DB_HOST"]
     port = os.environ["ANGROM_DB_POOL_PORT"]
-    database = os.environ.get("ANGROM_APP_POOL", os.environ["ANGROM_DB_NAME"])
-
+    database = (
+        os.environ.get("ANGROM_TEST_POOL")
+        or os.environ.get("ANGROM_APP_POOL")
+        or os.environ["ANGROM_DB_NAME"]
+    )
     return (
         "postgresql+psycopg_async://"
         f"{user}:{password}@{host}:{port}/{database}?sslmode=require"
@@ -39,15 +79,13 @@ def _database_url() -> str:
 @pytest_asyncio.fixture(scope="session")
 async def engine() -> AsyncIterator[AsyncEngine]:
     """Create an async engine pointed at the test database."""
+    _reset_database_schema()
     engine = create_async_engine(
         _database_url(),
         echo=False,
         poolclass=NullPool,
         pool_pre_ping=True,
     )
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
 
     try:
         yield engine

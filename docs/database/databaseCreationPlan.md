@@ -70,7 +70,7 @@ dotenv run -- env ANGROM_DB_NAME=$ANGROM_TEST_DB_NAME python scripts/setup_datab
 
 ## 🛠️ Post-Setup Tasks
 
-1. **Create tables**: run the bootstrap script with admin credentials to materialize all schema objects in `ANGROM_DB_NAME`:
+1. **Create tables**: run the bootstrap script with admin credentials to materialize all schema objects in `ANGROM_DB_NAME`. The script will also ensure the `pgcrypto` extension is enabled and that new columns (e.g., `notification_deliveries.organization_id`) are present even on existing tables:
    ```bash
    python scripts/bootstrap_schema.py
    ```
@@ -87,6 +87,8 @@ dotenv run -- env ANGROM_DB_NAME=$ANGROM_TEST_DB_NAME python scripts/setup_datab
      psql "postgresql://${ANGROM_DB_USER}:${ANGROM_DB_USER_PASSWORD}@${ANGROM_DB_HOST}:${ANGROM_DB_POOL_PORT}/${ANGROM_APP_POOL}?sslmode=require" \
      -c '\dt'
    ```
+
+> ℹ️ **Integration tests** use `ANGROM_TEST_DB_NAME`/`ANGROM_TEST_POOL` and will rebuild the schema before each session by dropping and recreating the `public` schema via admin credentials. Ensure the admin user retains the privileges needed to run `DROP SCHEMA`/`CREATE SCHEMA` and `CREATE EXTENSION pgcrypto` on the test database.
 
 ## 🚦 Activate Application Services
 

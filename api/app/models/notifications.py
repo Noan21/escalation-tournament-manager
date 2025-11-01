@@ -15,12 +15,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import (
-    Base,
-    OrganizationScopedMixin,
-    TimestampMixin,
-    UUIDPrimaryKeyMixin,
-)
+from .base import Base, OrganizationScopedMixin, TimestampMixin, UUIDPrimaryKeyMixin
 from .enums import (
     NotificationChannel,
     NotificationStatus,
@@ -52,7 +47,9 @@ class NotificationPreference(
     muted_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
-class NotificationDelivery(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class NotificationDelivery(
+    OrganizationScopedMixin, UUIDPrimaryKeyMixin, TimestampMixin, Base
+):
     __tablename__ = "notification_deliveries"
 
     trigger: Mapped[str] = mapped_column(String, nullable=False)

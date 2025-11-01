@@ -8,6 +8,8 @@ from . import (
     notifications,
     players,
     rounds,
+    orchestrator,
+    season,
     standings,
     structure,
 )
@@ -20,7 +22,8 @@ __all__ = [
     "notifications",
     "players",
     "rounds",
+    "orchestrator",
+    "season",
     "standings",
     "structure",
 ]
-

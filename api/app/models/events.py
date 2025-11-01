@@ -196,8 +196,8 @@ class Registration(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             name="ck_registrations_subject_xor",
         ),
         CheckConstraint(
-            "(subject_type = 'participant' AND participant_id IS NOT NULL) OR "
-            "(subject_type = 'team' AND team_id IS NOT NULL)",
+            "(subject_type = 'PARTICIPANT' AND participant_id IS NOT NULL) OR "
+            "(subject_type = 'TEAM' AND team_id IS NOT NULL)",
             name="ck_registrations_subject_match",
         ),
         Index(

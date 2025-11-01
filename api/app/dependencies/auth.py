@@ -60,3 +60,14 @@ async def get_current_user_profile(
     user: Annotated[User, Depends(get_current_user)]
 ) -> UserProfile:
     return UserProfile.model_validate(user)
+
+
+def require_roles(*allowed_roles: str):
+    async def _checker(user: Annotated[User, Depends(get_current_user)]) -> User:
+        if not allowed_roles:
+            return user
+        if not any(role in allowed_roles for role in user.roles):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+        return user
+
+    return _checker

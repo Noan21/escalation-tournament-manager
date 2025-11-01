@@ -15,29 +15,29 @@ Step-by-step roadmap for moving from documentation to a functioning platform.
 - [x] Add fixtures/utilities for integration tests (transactional session, seed helpers).
 
 ## Phase 2 – Auth Foundation
-- [ ] Implement `AuthService` (password hashing, tokens, email verification, magic links).
-- [ ] Build `/api/auth` routes and middleware for role enforcement.
-- [ ] Wire email sending via placeholder adapter (console/log) pending real provider.
-- [ ] Write integration tests covering register → verify → login → magic link → logout.
-- [ ] Implement frontend auth hooks (`useRegister`, `useLogin`, etc.) with simple pages.
+- [x] Implement `AuthService` (password hashing, tokens, email verification, magic links).
+- [x] Build `/api/auth` routes and middleware for role enforcement.
+- [x] Wire email sending via placeholder adapter (console/log) pending real provider.
+- [x] Write integration tests covering register → verify → login → magic link → logout.
+- [x] Implement frontend auth hooks (`useRegister`, `useLogin`, etc.) with simple pages.
 
 ## Phase 3 – Core Domain Services
-- [ ] Implement RegistrationService, PairingService, ScoringService, StandingsService, SeasonService.
-- [ ] Back services with SQLAlchemy repositories + transaction management.
-- [ ] Create FastAPI routers per `docs/api/EndpointMap.md` (registrations, stages, rounds, seasons, etc.).
-- [ ] Add integration tests for event lifecycle (registration → pairing → scoring → standings).
-- [ ] Build minimal admin UI views for managing events/stages.
+- [x] Implement RegistrationService, PairingService, ScoringService, StandingsService, SeasonService.
+- [x] Back services with SQLAlchemy repositories + transaction management.
+- [x] Create FastAPI routers per `docs/api/EndpointMap.md` (registrations, stages, rounds, seasons, etc.).
+- [x] Add integration tests for event lifecycle (registration → pairing → scoring → standings).
+- [x] Build minimal admin UI views for managing events/stages.
 
 ## Phase 4 – Agents & Background Jobs
-- [ ] Implement agent entrypoints using services (RegistrationAgent, PairingAgent, etc.).
-- [ ] Integrate scheduling mechanism (e.g., APScheduler or Celery) following `docs/background/SchedulingPlan.md`.
-- [ ] Expose orchestrator APIs and CLI commands.
-- [ ] Add tests ensuring agents run idempotently and produce expected states.
+- [x] Implement agent entrypoints using services (RegistrationAgent, PairingAgent, etc.).
+- [x] Integrate scheduling mechanism (e.g., APScheduler or Celery) following `docs/background/SchedulingPlan.md`.
+- [x] Expose orchestrator APIs and CLI commands.
+- [x] Add tests ensuring agents run idempotently and produce expected states.
 
 ## Phase 5 – Notifications & Maintenance
-- [ ] Implement NotificationService/Agent (preference management, delivery logging).
-- [ ] Integrate email/webhook providers (start with log-based stub).
-- [ ] Implement MaintenanceAgent cleanup/archive routines.
+- [x] Implement NotificationService/Agent (preference management, delivery logging).
+- [x] Integrate email/webhook providers (start with log-based stub).
+- [x] Implement MaintenanceAgent cleanup/archive routines.
 - [ ] Extend frontend admin console for notifications/maintenance controls.
 
 ## Phase 6 – Frontend UX Polish

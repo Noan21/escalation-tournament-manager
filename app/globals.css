@@ -1,0 +1,112 @@
+:root {
+  color-scheme: light dark;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(160deg, #0f172a 20%, #1e293b 70%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.centered-card {
+  margin: auto;
+  width: min(420px, 92vw);
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(14px);
+}
+
+.card-title {
+  margin-bottom: 16px;
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.card-description {
+  margin-bottom: 24px;
+  color: #94a3b8;
+}
+
+.form-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.95rem;
+  color: #cbd5f5;
+  gap: 6px;
+}
+
+.form-grid input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.6);
+  color: #e2e8f0;
+}
+
+.primary-button {
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #38bdf8, #6366f1);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 40px rgba(99, 102, 241, 0.35);
+}
+
+.form-footer {
+  margin-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+.error-banner {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  font-size: 0.95rem;
+}
+
+.success-banner {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: rgba(34, 197, 94, 0.2);
+  color: #bbf7d0;
+  font-size: 0.95rem;
+}

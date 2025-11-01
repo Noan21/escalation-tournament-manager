@@ -119,13 +119,42 @@ class MatchResultSubmit(BaseModel):
     note: str | None = Field(default=None, max_length=512)
 
 
+class GenerateRoundRequest(BaseModel):
+    round_number: int | None = Field(default=None, ge=1)
+    pairing_seed: str | None = None
+
+
+class TableAssignment(BaseModel):
+    match_id: UUID
+    table_number: int = Field(..., ge=1)
+
+
+class AssignTablesRequest(BaseModel):
+    assignments: list[TableAssignment] = Field(default_factory=list)
+
+
+class PairingPreview(BaseModel):
+    stage_id: UUID
+    round_number: int
+    matches: list[MatchProfile] = Field(default_factory=list)
+
+
+class ReopenRoundRequest(BaseModel):
+    reason: str = Field(..., min_length=3, max_length=280)
+
+
 __all__ = [
+    "AssignTablesRequest",
     "GameResult",
+    "GenerateRoundRequest",
     "MatchAssignment",
     "MatchProfile",
     "MatchResultSubmit",
+    "PairingPreview",
     "MatchScore",
+    "ReopenRoundRequest",
     "ParticipantSlot",
     "RoundProfile",
     "RoundTiming",
+    "TableAssignment",
 ]

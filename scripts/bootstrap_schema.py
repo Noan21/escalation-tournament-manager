@@ -19,7 +19,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from psycopg import connect, sql
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
@@ -54,7 +54,14 @@ def build_sqlalchemy_engine(database: str):
     engine = create_engine(url, future=True)
 
     with engine.begin() as connection:
+        connection.execute(text("CREATE EXTENSION IF NOT EXISTS pgcrypto"))
         Base.metadata.create_all(bind=connection, checkfirst=True)
+        connection.execute(
+            text(
+                "ALTER TABLE notification_deliveries "
+                "ADD COLUMN IF NOT EXISTS organization_id UUID"
+            )
+        )
 
     return engine
 

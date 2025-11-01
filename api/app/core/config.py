@@ -2,12 +2,24 @@ from __future__ import annotations
 
 import os
 from functools import lru_cache
+import json
 
 from dotenv import load_dotenv
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 load_dotenv()
+
+
+def _normalize_cors_env_var() -> None:
+    raw = os.getenv("ANGROM_CORS_ORIGINS")
+    if raw and not raw.strip().startswith("["):
+        origins = [item.strip() for item in raw.split(",") if item.strip()]
+        if origins:
+            os.environ["ANGROM_CORS_ORIGINS"] = json.dumps(origins)
+
+
+_normalize_cors_env_var()
 
 
 def _build_default_database_url() -> str:
@@ -40,6 +52,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="ANGROM_", case_sensitive=False)
 
     database_url: str = Field(default_factory=_build_default_database_url)
+    cors_origins: list[str] = Field(
+        default_factory=lambda: ["http://localhost:3000", "http://127.0.0.1:3000"],
+        description="Allowed CORS origins. Provide a comma-separated list via ANGROM_CORS_ORIGINS.",
+    )
 
     jwt_access_secret: str = Field(
         default="dev-access-secret",
@@ -55,6 +71,17 @@ class Settings(BaseSettings):
 
     email_verification_hours: int = Field(default=24)
     magic_link_minutes: int = Field(default=15)
+
+    @model_validator(mode="before")
+    def split_cors_origins(cls, values: dict[str, object]) -> dict[str, object]:
+        origins = values.get("cors_origins")
+        if isinstance(origins, str):
+            parsed = [item.strip() for item in origins.split(",") if item.strip()]
+            values["cors_origins"] = parsed or [
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+            ]
+        return values
 
     @model_validator(mode="after")
     def default_refresh_secret(self) -> Settings:

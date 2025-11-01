@@ -45,4 +45,33 @@ class MigrationPolicy(BaseModel):
     last_status: MigrationStatus | None = None
 
 
-__all__ = ["ArchivePolicy", "CleanupPolicy", "MigrationPolicy"]
+class CleanupTriggerRequest(BaseModel):
+    targets: list[CleanupTarget] | None = None
+    dry_run: bool = False
+
+
+class ArchiveTriggerRequest(BaseModel):
+    policy_ids: list[UUID] | None = None
+    dry_run: bool = False
+
+
+class MigrationTriggerRequest(BaseModel):
+    policy_ids: list[UUID] | None = None
+    dry_run: bool = False
+
+
+class MaintenanceSummary(BaseModel):
+    summary: str
+    items_processed: int = 0
+    details: list[str] = Field(default_factory=list)
+
+
+__all__ = [
+    "ArchivePolicy",
+    "ArchiveTriggerRequest",
+    "CleanupPolicy",
+    "CleanupTriggerRequest",
+    "MaintenanceSummary",
+    "MigrationPolicy",
+    "MigrationTriggerRequest",
+]

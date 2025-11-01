@@ -59,7 +59,12 @@ class StandingsPayload(BaseModel):
     tiebreak_snapshots: list[TiebreakSnapshot] = Field(default_factory=list)
 
 
+class ComputeStandingsRequest(BaseModel):
+    scoring_profile_key: str | None = Field(default=None)
+
+
 __all__ = [
+    "ComputeStandingsRequest",
     "StandingsPayload",
     "StandingsRow",
     "TiebreakSnapshot",

@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 from api.app.models.enums import (
     CheckInMethod,
@@ -122,14 +122,54 @@ class ParticipantUpdate(BaseModel):
     meta: dict[str, object] | None = None
 
 
+class EventRegistrationCreate(BaseModel):
+    subject_type: RegistrationSubjectType = RegistrationSubjectType.PARTICIPANT
+    participant_id: UUID | None = Field(default=None)
+    team_id: UUID | None = Field(default=None)
+    seeding_score: float | None = None
+    notes: str | None = Field(default=None, max_length=512)
+    meta: dict[str, object] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def validate_subject(self) -> EventRegistrationCreate:
+        participant = self.participant_id is not None
+        team = self.team_id is not None
+        if participant == team:
+            raise ValueError("Provide exactly one of participant_id or team_id")
+        if self.subject_type == RegistrationSubjectType.PARTICIPANT and not participant:
+            raise ValueError("participant_id required when subject_type=participant")
+        if self.subject_type == RegistrationSubjectType.TEAM and not team:
+            raise ValueError("team_id required when subject_type=team")
+        return self
+
+
+class UpdateRegistrationStatus(BaseModel):
+    status: RegistrationStatus
+
+
+class CheckInRequest(BaseModel):
+    method: CheckInMethod = CheckInMethod.ADMIN_MANUAL
+    note: str | None = Field(default=None, max_length=256)
+
+
+class SeedRosterResult(BaseModel):
+    created: int = 0
+    skipped: int = 0
+    already_present: int = 0
+
+
 __all__ = [
     "CheckInRecord",
     "ContactHandle",
+    "CheckInRequest",
+    "EventRegistrationCreate",
     "EventRegistration",
     "HandleType",
     "ParticipantCreate",
     "ParticipantProfile",
     "ParticipantUpdate",
+    "SeedRosterResult",
     "TeamMember",
     "TeamProfile",
+    "UpdateRegistrationStatus",
 ]
