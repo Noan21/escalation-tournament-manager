@@ -68,15 +68,17 @@ def ensure_user(cur, username: str, password: str):
     cur.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (username,))
     if cur.fetchone():
         cur.execute(
-            sql.SQL("ALTER USER {} WITH PASSWORD %s").format(sql.Identifier(username)),
-            (password,),
+            sql.SQL("ALTER USER {} WITH PASSWORD {}").format(
+                sql.Identifier(username), sql.Literal(password)
+            )
         )
         print(f"[alter] user {username} password updated")
         return
 
     cur.execute(
-        sql.SQL("CREATE USER {} WITH PASSWORD %s").format(sql.Identifier(username)),
-        (password,),
+        sql.SQL("CREATE USER {} WITH PASSWORD {}").format(
+            sql.Identifier(username), sql.Literal(password)
+        ),
     )
     print(f"[create] user {username}")
 
