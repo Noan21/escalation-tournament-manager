@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -16,8 +16,10 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.pool import NullPool
 
+from api.app.dependencies.auth import get_auth_notification_backend
 from api.app.main import app, get_db_session
 from api.app.models import Base
+from api.app.services.auth import AuthNotificationBackend
 
 
 def _database_url() -> str:
@@ -82,16 +84,38 @@ async def db_session(engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
             await transaction.rollback()
 
 
+class InMemoryAuthDispatcher(AuthNotificationBackend):
+    def __init__(self) -> None:
+        self.verification_tokens: dict[str, list[str]] = {}
+        self.magic_link_tokens: dict[str, list[str]] = {}
+
+    async def send_verification_email(self, email: str, token: str) -> None:
+        self.verification_tokens.setdefault(email, []).append(token)
+
+    async def send_magic_link_email(self, email: str, token: str) -> None:
+        self.magic_link_tokens.setdefault(email, []).append(token)
+
+
+@pytest.fixture
+def auth_dispatcher() -> InMemoryAuthDispatcher:
+    return InMemoryAuthDispatcher()
+
+
 @pytest_asyncio.fixture
-async def app_client(db_session: AsyncSession) -> AsyncIterator[AsyncClient]:
-    """Provide an HTTP client with the database dependency overridden."""
+async def app_client(
+    db_session: AsyncSession, auth_dispatcher: InMemoryAuthDispatcher
+) -> AsyncIterator[AsyncClient]:
+    """Provide an HTTP client with overridden dependencies."""
 
     async def override_session() -> AsyncIterator[AsyncSession]:
         yield db_session
 
     app.dependency_overrides[get_db_session] = override_session
+    app.dependency_overrides[get_auth_notification_backend] = lambda: auth_dispatcher
 
-    async with AsyncClient(app=app, base_url="http://testserver") as client:
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         yield client
 
     app.dependency_overrides.clear()
