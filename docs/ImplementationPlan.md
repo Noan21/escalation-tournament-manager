@@ -3,7 +3,7 @@
 Step-by-step roadmap for moving from documentation to a functioning platform.
 
 ## Phase 0 – Environment Prep
-- [ ] Ensure `.env` defines `ANGROM_TEST_DB_NAME` and run `dotenv run -- env ANGROM_DB_NAME=$ANGROM_TEST_DB_NAME python scripts/setup_database.py` to provision the test database.
+- [ ] Ensure `.env` defines `ANGROM_TEST_DB_NAME` / `ANGROM_TEST_POOL` and run `dotenv run -- env ANGROM_DB_NAME=$ANGROM_TEST_DB_NAME python scripts/setup_database.py` to provision the test database (override `ANGROM_APP_POOL=$ANGROM_TEST_POOL` when running migrations/tests).
 - [x] Set up Python/Node toolchains (`python -m venv .venv`, `pnpm install` once package manifests exist).
 - [x] Create a dependency manifest (`pyproject.toml` + lockfile or `requirements.txt`) capturing baseline backend packages (FastAPI, SQLAlchemy, Alembic, pytest, etc.).
 - [x] Configure linting/formatting (`ruff`, `black`, `mypy`, `eslint`, `prettier`) baseline configs.

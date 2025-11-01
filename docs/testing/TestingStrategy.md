@@ -12,12 +12,15 @@ All automated tests run as integration tests against a real PostgreSQL instance.
 
 ## 🏗️ Environment Setup
 
-1. Ensure `.env` includes `ANGROM_TEST_DB_NAME` alongside the primary database settings.
+1. Ensure `.env` includes both `ANGROM_TEST_DB_NAME` (admin connectivity) and `ANGROM_TEST_POOL` (application pool) alongside the primary database settings.
 2. Provision the test database by reusing `scripts/setup_database.py` while overriding the target database:
    ```bash
    dotenv run -- env ANGROM_DB_NAME=$ANGROM_TEST_DB_NAME python scripts/setup_database.py
    ```
-3. Run Alembic migrations against the test database before executing tests (override `ANGROM_DB_NAME` or full DSN to point at `ANGROM_TEST_DB_NAME`).
+3. Run Alembic migrations against the test database before executing tests by overriding the pool target:
+   ```bash
+   dotenv run -- env ANGROM_APP_POOL=$ANGROM_TEST_POOL alembic upgrade head
+   ```
 
 ## 🔁 Test Lifecycle
 
@@ -39,7 +42,7 @@ All automated tests run as integration tests against a real PostgreSQL instance.
 ## ⚙️ Running Tests
 
 ```bash
-dotenv run -- env ANGROM_DB_NAME=$ANGROM_TEST_DB_NAME pytest
+dotenv run -- env ANGROM_APP_POOL=$ANGROM_TEST_POOL pytest
 ```
 
 Add `--maxfail=1` and `-vv` for detailed output when debugging.

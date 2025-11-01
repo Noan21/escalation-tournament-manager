@@ -31,9 +31,9 @@ def _build_database_url() -> str:
     required = {
         "ANGROM_DB_USER": os.getenv("ANGROM_DB_USER"),
         "ANGROM_DB_USER_PASSWORD": os.getenv("ANGROM_DB_USER_PASSWORD"),
-        "ANGROM_HOST_POOL": os.getenv("ANGROM_HOST_POOL"),
+        "ANGROM_DB_HOST": os.getenv("ANGROM_DB_HOST"),
         "ANGROM_DB_POOL_PORT": os.getenv("ANGROM_DB_POOL_PORT"),
-        "ANGROM_DB_NAME": os.getenv("ANGROM_DB_NAME"),
+        "ANGROM_APP_POOL": os.getenv("ANGROM_APP_POOL"),
     }
 
     missing = [key for key, value in required.items() if not value]
@@ -48,9 +48,10 @@ def _build_database_url() -> str:
             "postgresql+psycopg",
             username=required["ANGROM_DB_USER"],
             password=required["ANGROM_DB_USER_PASSWORD"],
-            host=required["ANGROM_HOST_POOL"],
+            host=required["ANGROM_DB_HOST"],
             port=int(required["ANGROM_DB_POOL_PORT"]),  # type: ignore[arg-type]
-            database=required["ANGROM_DB_NAME"],
+            database=required["ANGROM_APP_POOL"],
+            query={"sslmode": "require"},
         )
     )
 

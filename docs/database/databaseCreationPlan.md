@@ -12,10 +12,11 @@ The `.env` file (already present at the repo root) defines the following keys:
 | `ANGROM_DB_HOST_DEFAULT_DB` | Default admin database (`defaultdb`) required when connecting as the admin user. |
 | `ANGROM_DB_ADMIN_PORT` | Admin port exposed by the cluster; use this with the `doadmin` account. |
 | `ANGROM_DB_ADMIN` / `ANGROM_DB_PASSWORD` | Cluster admin credentials. |
-| `ANGROM_DB_NAME` | Application database to create/manage. |
-| `ANGROM_TEST_DB_NAME` | Dedicated test database for integration tests (override `ANGROM_DB_NAME` when provisioning or migrating). |
+| `ANGROM_DB_NAME` | Application database to create/manage (admin connectivity). |
+| `ANGROM_TEST_DB_NAME` | Dedicated test database for integration tests (admin connectivity). |
 | `ANGROM_DB_USER` / `ANGROM_DB_USER_PASSWORD` | Service account the app uses via the connection pool. |
-| `ANGROM_HOST_POOL` | DigitalOcean connection pool hostname. |
+| `ANGROM_APP_POOL` | Connection pool database name for the live app traffic. |
+| `ANGROM_TEST_POOL` | Connection pool database name dedicated to integration tests. |
 | `ANGROM_DB_POOL_PORT` | Port to reach the pool (application connections). |
 
 Load these in your shell for ad-hoc commands with `dotenv`:
@@ -34,7 +35,7 @@ When running Python scripts, `python-dotenv` can auto-load `.env` (see scaffoldi
 ## 🧱 Admin vs Application Connections
 
 - **Admin tasks (setup, grants, migrations)** must use the admin port (`ANGROM_DB_ADMIN_PORT`) and the `defaultdb` database specified by `ANGROM_DB_HOST_DEFAULT_DB`. This is required before the application database exists or when modifying cluster-level privileges.
-- **Application traffic** must use the pool host (`ANGROM_HOST_POOL`) and pool port (`ANGROM_DB_POOL_PORT`). The pool transparently routes to `ANGROM_DB_NAME`, so the client DSN should target the pool (database name can still be `ANGROM_DB_NAME` for clarity).
+- **Application traffic** must use the pool port (`ANGROM_DB_POOL_PORT`) on the same host as admin connections. Select the pool-backed database by choosing `ANGROM_APP_POOL` (or `ANGROM_TEST_POOL` for test runs).
 
 ## 🚀 Scaffolding Script
 
@@ -69,21 +70,21 @@ dotenv run -- env ANGROM_DB_NAME=$ANGROM_TEST_DB_NAME python scripts/setup_datab
 
 ## 🛠️ Post-Setup Tasks
 
-1. **Migrations**: once Alembic migrations exist, run them with the admin connection or a migration-specific role:
+1. **Migrations**: once Alembic migrations exist, run them with the pool connection so the DSN matches production. By default this targets `ANGROM_APP_POOL`:
    ```bash
    dotenv run -- alembic upgrade head
    ```
-   For the test database, override the target name or DSN when invoking Alembic:
+   For the test database, point the pool override at `ANGROM_TEST_POOL`:
    ```bash
-   dotenv run -- env ANGROM_DB_NAME=$ANGROM_TEST_DB_NAME alembic upgrade head
+   dotenv run -- env ANGROM_APP_POOL=$ANGROM_TEST_POOL alembic upgrade head
    ```
-   Ensure Alembic’s DSN uses the admin port or an account with DDL privileges.
+   When direct admin access is required, continue to use `ANGROM_DB_HOST` + `ANGROM_DB_ADMIN_PORT` and `ANGROM_DB_NAME`.
 2. **Application configuration**: point the FastAPI service to the pool with a DSN like
-   `postgresql+psycopg://${ANGROM_DB_USER}:${ANGROM_DB_USER_PASSWORD}@${ANGROM_HOST_POOL}:${ANGROM_DB_POOL_PORT}/${ANGROM_DB_NAME}`.
+   `postgresql+psycopg://${ANGROM_DB_USER}:${ANGROM_DB_USER_PASSWORD}@${ANGROM_DB_HOST}:${ANGROM_DB_POOL_PORT}/${ANGROM_APP_POOL}?sslmode=require`.
 3. **Verification**: connect via the pool and confirm you can list tables, insert data, etc.:
    ```bash
    dotenv run -- \
-     psql "postgresql://${ANGROM_DB_USER}:${ANGROM_DB_USER_PASSWORD}@${ANGROM_HOST_POOL}:${ANGROM_DB_POOL_PORT}/${ANGROM_DB_NAME}" \
+     psql "postgresql://${ANGROM_DB_USER}:${ANGROM_DB_USER_PASSWORD}@${ANGROM_DB_HOST}:${ANGROM_DB_POOL_PORT}/${ANGROM_APP_POOL}?sslmode=require" \
      -c '\dt'
    ```
 
@@ -94,7 +95,7 @@ Once the database is provisioned:
 1. Export the `.env` values into your process environment (or rely on `python-dotenv` in your app entrypoints).
 2. Start the FastAPI backend with access to the pool connection string:
    ```bash
-   ANGROM_DATABASE_URL="postgresql+psycopg://${ANGROM_DB_USER}:${ANGROM_DB_USER_PASSWORD}@${ANGROM_HOST_POOL}:${ANGROM_DB_POOL_PORT}/${ANGROM_DB_NAME}"
+   ANGROM_DATABASE_URL="postgresql+psycopg://${ANGROM_DB_USER}:${ANGROM_DB_USER_PASSWORD}@${ANGROM_DB_HOST}:${ANGROM_DB_POOL_PORT}/${ANGROM_APP_POOL}?sslmode=require"
    dotenv run -- \
      uvicorn app.main:app --reload
    ```
